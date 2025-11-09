@@ -1,4 +1,3 @@
-
 # Build stage
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
@@ -17,17 +16,17 @@ WORKDIR /tinkerforge2mqtt
 RUN ./cli.py --help || true
 
 FROM ${BASE_IMAGE} AS run
-# Install brickd from Tinkerforge repository
+# Install brickd from Tinkerforge repository and wireless-tools for iwconfig
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends curl gnupg lsb-release ca-certificates git && \
+	apt-get install -y --no-install-recommends curl gnupg lsb-release ca-certificates git wireless-tools && \
 	curl -fsSL https://download.tinkerforge.com/apt/debian/tinkerforge.gpg -o /usr/share/keyrings/tinkerforge-archive.gpg && \
 	echo "deb [signed-by=/usr/share/keyrings/tinkerforge-archive.gpg] https://download.tinkerforge.com/apt/debian $(lsb_release -cs) main" > /etc/apt/sources.list.d/tinkerforge.list && \
 	apt-get update && apt-get install -y --no-install-recommends brickd && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /tinkerforge2mqtt /tinkerforge2mqtt
-COPY tinkerforge2mqtt/entrypoint.sh /entrypoint.sh
-COPY tinkerforge2mqtt/tinkerforge2mqtt.toml /root/.config/tinkerforge2mqtt/
+COPY entrypoint.sh /entrypoint.sh
+COPY tinkerforge2mqtt.toml /root/.config/tinkerforge2mqtt/
 
 RUN chmod +x /entrypoint.sh
 

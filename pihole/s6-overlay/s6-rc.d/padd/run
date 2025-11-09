@@ -12,9 +12,22 @@ dbus-send \
     string:"plymouth-quit.service" string:"replace"
 
 s6-echo "Setting console font to ${FONTFACE} ${FONTSIZE}..."
-sed -i "s/^FONTFACE.*/FONTFACE=\"${FONTFACE}\"/" /etc/default/console-setup
-sed -i "s/^FONTSIZE.*/FONTSIZE=\"${FONTSIZE}\"/" /etc/default/console-setup
-dpkg-reconfigure console-setup 2> /dev/null > /dev/tty1
+# Alpine Linux font configuration - use setfont directly instead of console-setup
+if [ -n "${FONTFACE}" ]; then
+    # Try to set the font, with fallback options
+    if ! setfont "${FONTFACE}" 2>/dev/null; then
+        s6-echo "Warning: Could not set font ${FONTFACE}, trying default fonts..."
+        # Try some common Alpine/console fonts as fallbacks
+        for fallback_font in "ter-112n" "lat9w-14" "default8x14" "default8x16"; do
+            if setfont "${fallback_font}" 2>/dev/null; then
+                s6-echo "Successfully set fallback font: ${fallback_font}"
+                break
+            fi
+        done
+    else
+        s6-echo "Successfully set font: ${FONTFACE}"
+    fi
+fi
 
 # see https://github.com/klutchell/balena-pihole/issues/187
 s6-echo "Detecting screen size..."

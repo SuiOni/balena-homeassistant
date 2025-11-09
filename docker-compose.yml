@@ -22,8 +22,8 @@ services:
     # https://hub.docker.com/r/homeassistant/home-assistant
   homeassistant:
     image: homeassistant/home-assistant:2025.11@sha256:c11dd7c74039223c43079d700aa559d6dc61e8e0b38a08d651f91d1bc550cff5
-    ports:
-      - 8080:8123
+    # ports:
+    #   - 8080:8123
     network_mode: host
     volumes:
       - config:/config
@@ -45,7 +45,7 @@ services:
 
   # https://esphome.io/guides/getting_started_command_line.html#installation
   esphome:
-    image: ghcr.io/esphome/esphome:2025.10.4@sha256:5855694472a00c7e71176ac7f4cae3fd6366228532354ceda67eac5679e39cf3
+    image: ghcr.io/esphome/esphome:2025.10.4@sha256:d38437b9d7b27166cbb07ad58ccfe9da1d7bb2d9674d036e0529953991ff057e
     volumes:
       - esphome:/config
     privileged: true
@@ -60,23 +60,23 @@ services:
     privileged: true
 
   # https://hub.docker.com/r/codercom/code-server
-  code-server:
-    image: codercom/code-server:4.105.1@sha256:2d48970bd2084aa34a522d772b6a437981ea80407465b3bf7958553985c570e1
-    command:
-      - --port=9000
-      - --auth=none
-      - --extensions-dir=/config/.vscode
-      - --user-data-dir=/config/.vscode
-      - /config
-    working_dir: /config
-    ports:
-      - 9000:9000/tcp
-    volumes:
-      - config:/config
-      - tinkerforge2mqtt:/config/tinkerforge2mqtt
-      - esphome:/config/esphome
-      - frigate-config:/config/frigate
-    user: root
+  # code-server:
+  #   image: codercom/code-server:4.105.1@sha256:2d48970bd2084aa34a522d772b6a437981ea80407465b3bf7958553985c570e1
+  #   command:
+  #     - --port=9000
+  #     - --auth=none
+  #     - --extensions-dir=/config/.vscode
+  #     - --user-data-dir=/config/.vscode
+  #     - /config
+  #   working_dir: /config
+  #   ports:
+  #     - 9000:9000/tcp
+  #   volumes:
+  #     - config:/config
+  #     - tinkerforge2mqtt:/config/tinkerforge2mqtt
+  #     - esphome:/config/esphome
+  #     - frigate-config:/config/frigate
+  #   user: root
 
   # https://hub.docker.com/_/influxdb
   # https://www.home-assistant.io/integrations/influxdb/
@@ -123,7 +123,6 @@ services:
       - influxdb-config:/volumes/influxdb-config
       - grafana:/volumes/grafana
       - tinkerforge2mqtt:/volumes/tinkerforge2mqtt
-      - frigate-media:/volumes/frigate-media
       - tailscale:/volumes/tailscale
       - netdatalib:/volumes/netdatalib
       - esphome:/volumes/esphome
@@ -147,14 +146,27 @@ services:
       - /dev/tty1
     tmpfs:
       - /var/log/pihole
+    ports:
+      # DNS Ports
+      - "53:53/tcp"
+      - "53:53/udp"
+      # Default HTTP Port
+      - "80:80/tcp"
+      # Default HTTPs Port. FTL will generate a self-signed certificate
+      - "443:443/tcp"
+      # Uncomment the below if using Pi-hole as your DHCP Server
+      #- "67:67/udp"
     environment:
       DNSMASQ_LISTENING: all
       PIHOLE_DNS_: 1.1.1.1;1.0.0.1
       FONTFACE: Terminus
       FONTSIZE: 8x14
       WEBPASSWORD: balena
+      FTLCONF_webserver_api_password: 'balena'
       VIRTUAL_HOST: balena-devices.com
       WEB_BIND_ADDR: 0.0.0.0
+      TZ: 'Europe/Berlin'
+    restart: unless-stopped
 
   unbound:
     build: unbound
