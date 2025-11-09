@@ -19,7 +19,7 @@ RUN ./cli.py --help || true
 FROM ${BASE_IMAGE} AS run
 # Install brickd from Tinkerforge repository
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends curl gnupg lsb-release ca-certificates && \
+	apt-get install -y --no-install-recommends curl gnupg lsb-release ca-certificates git && \
 	curl -fsSL https://download.tinkerforge.com/apt/debian/tinkerforge.gpg -o /usr/share/keyrings/tinkerforge-archive.gpg && \
 	echo "deb [signed-by=/usr/share/keyrings/tinkerforge-archive.gpg] https://download.tinkerforge.com/apt/debian $(lsb_release -cs) main" > /etc/apt/sources.list.d/tinkerforge.list && \
 	apt-get update && apt-get install -y --no-install-recommends brickd && \
