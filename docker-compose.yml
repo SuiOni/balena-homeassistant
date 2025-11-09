@@ -56,7 +56,7 @@ services:
     volumes:
       - tinkerforge2mqtt:/app/data
     ports:
-      - 7000:7000
+      - 4223:4223
     privileged: true
 
   # https://hub.docker.com/r/codercom/code-server
