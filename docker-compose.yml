@@ -9,7 +9,7 @@ volumes:
   influxdb-config: {}
   grafana: {}
   mqtt: {}
-  zigbee2mqtt: {}
+  tinkerforge2mqtt: {}
   duplicati: {}
   frigate-config: {}
   frigate-media: {}
@@ -21,7 +21,7 @@ volumes:
 services:
     # https://hub.docker.com/r/homeassistant/home-assistant
   homeassistant:
-    image: homeassistant/home-assistant:2024.12.5@sha256:132ef461504be5c5ebd6e34e5d3fb3d7958bb6758a5136107eea9f84c299254a
+    image: homeassistant/home-assistant:2025.11@sha256:c11dd7c74039223c43079d700aa559d6dc61e8e0b38a08d651f91d1bc550cff5
     ports:
       - 8080:8123
     network_mode: host
@@ -45,24 +45,23 @@ services:
 
   # https://esphome.io/guides/getting_started_command_line.html#installation
   esphome:
-    image: ghcr.io/esphome/esphome:2024.12.2@sha256:ce313b07edc3d0bde937ce23821b5e0476dcc1cfb62456bef7a6f79b8109f678
+    image: ghcr.io/esphome/esphome:2025.10.4@sha256:5855694472a00c7e71176ac7f4cae3fd6366228532354ceda67eac5679e39cf3
     volumes:
       - esphome:/config
     privileged: true
     network_mode: host
 
-  # https://www.zigbee2mqtt.io/guide/getting-started/#installation
-  zigbee2mqtt:
-    build: zigbee2mqtt
+  tinkerforge2mqtt:
+    build: tinkerforge2mqtt
     volumes:
-      - zigbee2mqtt:/app/data
+      - tinkerforge2mqtt:/app/data
     ports:
       - 7000:7000
     privileged: true
 
   # https://hub.docker.com/r/codercom/code-server
   code-server:
-    image: codercom/code-server:4.96.2@sha256:6b8c0e944caec80057e71d2c2f352cee38fe00ae4b7515fc4458eb300844f699
+    image: codercom/code-server:4.105.1@sha256:2d48970bd2084aa34a522d772b6a437981ea80407465b3bf7958553985c570e1
     command:
       - --port=9000
       - --auth=none
@@ -74,7 +73,7 @@ services:
       - 9000:9000/tcp
     volumes:
       - config:/config
-      - zigbee2mqtt:/config/zigbee2mqtt
+      - tinkerforge2mqtt:/config/tinkerforge2mqtt
       - esphome:/config/esphome
       - frigate-config:/config/frigate
     user: root
@@ -82,7 +81,7 @@ services:
   # https://hub.docker.com/_/influxdb
   # https://www.home-assistant.io/integrations/influxdb/
   influxdb:
-    image: influxdb:2.7.11-alpine@sha256:0abb5192f5d03a926995a57d8ada705021872cf2e3c398e23f09a524b1e972c0
+    image: influxdb:2.7.12-alpine@sha256:b4dbe25bb8f8be38f9cf5a12cbca453318a1ad3475954e9d37c38f6e5bc5006b
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: homeassistant
@@ -98,7 +97,7 @@ services:
 
   # https://hub.docker.com/r/grafana/grafana
   grafana:
-    image: grafana/grafana:11.4.0@sha256:d8ea37798ccc41061a62ab080f2676dda6bf7815558499f901bdb0f533a456fb
+    image: grafana/grafana:12.2.0-16895479002@sha256:f318a84587ee2ba9b3d9e733003523cf300be245343f5b890debcdd48c397046
     volumes:
       - grafana:/var/lib/grafana
     ports:
@@ -123,67 +122,11 @@ services:
       - influxdb-data:/volumes/influxdb-data
       - influxdb-config:/volumes/influxdb-config
       - grafana:/volumes/grafana
-      - zigbee2mqtt:/volumes/zigbee2mqtt
+      - tinkerforge2mqtt:/volumes/tinkerforge2mqtt
       - frigate-media:/volumes/frigate-media
       - tailscale:/volumes/tailscale
       - netdatalib:/volumes/netdatalib
       - esphome:/volumes/esphome
-
-  # https://docs.frigate.video/frigate/installation
-  frigate:
-    image: ghcr.io/blakeblackshear/frigate:0.14.1@sha256:22e3d0b486df52c3d669682254c2b1bf4205fa6ad8bd8f8c9f7fe76b1517005d
-    privileged: true
-    ports:
-      - "8971:8971"
-      - "127.0.0.1:5000:5000" # Internal unauthenticated access. Expose carefully.
-      - "8554:8554" # RTSP feeds
-      - "8555:8555/tcp" # WebRTC over tcp
-      - "8555:8555/udp" # WebRTC over udp
-    volumes:
-      - frigate-config:/config
-      - frigate-media:/media/frigate
-    tmpfs:
-      - /tmp/cache
-    shm_size: 2048M
-    environment:
-      FRIGATE_RTSP_PASSWORD: "balena"
-      CONFIG_FILE: "/config/config.yml"
-    labels:
-      io.balena.features.kernel-modules: 1
-    devices:
-      - /dev/dri:/dev/dri
-
-  # https://github.com/home-assistant-libs/python-matter-server/blob/main/docs/docker.md
-  matter-server:
-    image: ghcr.io/home-assistant-libs/python-matter-server:7.0.0
-    # Required for mDNS to work correctly
-    network_mode: host
-    security_opt:
-      # Required for Bluetooth via D-Bus
-      - apparmor:unconfined
-    volumes:
-      - matter-server:/data/
-    environment:
-      # Required for Bluetooth via D-Bus
-      DBUS_SYSTEM_BUS_ADDRESS: unix:path=/host/run/dbus/system_bus_socket
-    labels:
-      # Required for Bluetooth via D-Bus
-      io.balena.features.dbus: '1'
-    # If you adjust command line, make sure to pass the default CMD arguments too:
-    #command: --storage-path /data --paa-root-cert-dir /data/credentials --bluetooth-adapter 0
-
-  # https://hub.docker.com/r/mrlt8/wyze-bridge/tags
-  wyze-bridge:
-    image: mrlt8/wyze-bridge:2.10.3@sha256:af2d638a6d6d52e15ddcfb711e5b905e484b1f519986ad33b9be562b6277b987
-    ports:
-      # - 1935:1935 # RTMP
-      # - 8554:8554 # RTSP
-      # - 8888:8888 # HLS
-      # - 8889:8889 # WebRTC
-      # - 8189:8189/udp # WebRTC/ICE
-      - 5001:5000 # WEB-UI
-    volumes:
-      - wyze-tokens:/tokens
   
   pihole:
     build: pihole
@@ -221,12 +164,6 @@ services:
       - "5053:5053/tcp"
       - "5053:5053/udp"
 
-  # https://github.com/balena-labs-projects/fbcp
-  # https://hub.balena.io/blocks/1792683/fbcp
-  fbcp:
-    image: bh.cr/balenalabs/fbcp/1.0.4
-    privileged: true
-
   # https://github.com/balenablocks/hostname
   # https://hub.balena.io/blocks/1918776/hostname-rpi
   hostname:
@@ -245,7 +182,7 @@ services:
   # https://tailscale.com/kb/1242/tailscale-serve
   # https://tailscale.com/kb/1311/tailscale-funnel
   tailscale:
-    image: tailscale/tailscale:v1.78.3@sha256:9d4c17a8451e2d1282c22aee1f08d28dc106979c39c7b5a35ec6313d4682a43e
+    image: tailscale/tailscale:v1.90.6@sha256:8eb8b450a85856807e8a216c4697333e15f8701cb6d344bed851bf6aa6a9605c
     environment:
       TS_STATE_DIR: /var/lib/tailscale
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
@@ -276,7 +213,7 @@ services:
         /usr/local/bin/containerboot
 
   netdata:
-    image: netdata/netdata:v2.1.0@sha256:fc0f7e7c6f042828f9e7370b9e6f41da30b328009ac5ab977b5578e806e83062
+    image: netdata/netdata:v2.7.3@sha256:c6b5012b08e6a67d513c75858fe4db88a30eaa7b383656e6ef2e09b9cf0a9333
     privileged: true
     network_mode: host
     cap_add:

@@ -1,0 +1,26 @@
+# Tinkerforge -> MQTT - settings
+#
+# Note: Insert at least device address + key and your MQTT settings.
+#
+# See README for more information.
+host = "localhost"  # brickd runs inside same container; change if using external host
+port = 4223          # brickd default exposed via EXPOSE 4223
+callback_period = 1
+
+[mqtt]
+# Credentials to MQTT server that should be used.
+#
+# The `main_uid` is used as a second prefix for all MQTT messages, to avoid conflicts.
+#
+# With `publish_config_throttle_seconds` you can set the throttle interval
+# for publishing config messages to Home Assistant and `publish_throttle_seconds`
+# is for state messages.
+host = "mqtt"
+port = 1883
+user_name = ""
+password = ""
+main_uid = "Mac"
+publish_config_throttle_seconds = 20
+publish_throttle_seconds = 5
+
+# systemd section removed for container environment (handled by entrypoint script)
