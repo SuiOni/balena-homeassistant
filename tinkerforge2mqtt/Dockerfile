@@ -27,7 +27,7 @@ RUN apt-get update && \
 
 COPY --from=build /tinkerforge2mqtt /tinkerforge2mqtt
 COPY tinkerforge2mqtt/entrypoint.sh /entrypoint.sh
-COPY tinkerforge2mqtt.toml /root/.config/tinkerforge2mqtt/
+COPY tinkerforge2mqtt/tinkerforge2mqtt.toml /root/.config/tinkerforge2mqtt/
 
 RUN chmod +x /entrypoint.sh
 
