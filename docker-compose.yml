@@ -19,6 +19,15 @@ volumes:
   esphome: {}
   matter-server: {}
 services:
+  wifi-connect:
+      build: ./wifi-connect
+      network_mode: "host"
+      labels:
+          io.balena.features.dbus: '1'
+      cap_add:
+          - NET_ADMIN
+      environment:
+          DBUS_SYSTEM_BUS_ADDRESS: "unix:path=/host/run/dbus/system_bus_socket"
     # https://hub.docker.com/r/homeassistant/home-assistant
   homeassistant:
     image: homeassistant/home-assistant:2025.11@sha256:c11dd7c74039223c43079d700aa559d6dc61e8e0b38a08d651f91d1bc550cff5
