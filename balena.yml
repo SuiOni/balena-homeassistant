@@ -32,5 +32,5 @@ data:
   applicationEnvironmentVariables:
     - WEBPASSWORD: 'balena'
     - PIHOLE_DNS_: '1.1.1.1;1.0.0.1'
-    - TS_AUTHKEY: 'tskey-auth-kABRHixgt511CNTRL-ovYEfPnvuM5P3hJA6TrJN55VvbvRLk7Ei'
+    - TS_AUTHKEY: ''
     - TINKERFORGE_HOST: '192.168.2.145'
