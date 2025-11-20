@@ -1,34 +1,52 @@
+
 # Build stage
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETOS
-ARG BASE_IMAGE=python:3.11-slim-bullseye
+ARG BUILD_IMAGE=balenalib/raspberrypi4-64-debian-python:3.11-latest
+ARG RUN_IMAGE=balenalib/raspberrypi4-64-debian-python:3.11-latest-run
 
-FROM ${BASE_IMAGE} AS build
-# Install build dependencies only
+FROM ${RUN_IMAGE} AS run
+
+ENV UDEV=on
+ENV VENV=/tinkerforge2mqtt/.venv-app/bin
+ENV OTHERENV=/root/.local/bin
+ENV PATH="$VENV:$OTHERENV:$PATH"
+
+
 RUN apt-get update && \
-	apt-get install -y git python3-venv && \
+	apt-get install -y --no-install-recommends curl gnupg lsb-release ca-certificates git wireless-tools python3-venv git uhubctl && \
+	curl -fsSL https://download.tinkerforge.com/apt/debian/tinkerforge.gpg -o /usr/share/keyrings/tinkerforge-archive.gpg && \
+	echo "deb [signed-by=/usr/share/keyrings/tinkerforge-archive.gpg] https://download.tinkerforge.com/apt/debian $(lsb_release -cs) main" > /etc/apt/sources.list.d/tinkerforge.list && \
+	apt-get update && apt-get install -y --no-install-recommends brickd tinkerforge-shell &&\
 	rm -rf /var/lib/apt/lists/*
-RUN git clone https://github.com/SuiOni/tinkerforge2mqtt.git /tinkerforge2mqtt
+
+# # Download the latest installer
+# ADD https://astral.sh/uv/0.9.8/install.sh /uv-installer.sh
+
+# # Run the installer then remove it
+# RUN sh /uv-installer.sh && rm /uv-installer.sh
+
+# Install build dependencies only
+RUN git clone --branch main https://github.com/SuiOni/tinkerforge2mqtt.git /tinkerforge2mqtt && \
+    cd /tinkerforge2mqtt && \
+    git checkout 980fd83
 WORKDIR /tinkerforge2mqtt
 # Bootstrap project virtual environment via provided CLI (creates .venv-app)
 RUN ./cli.py --help || true
 
-FROM ${BASE_IMAGE} AS run
-# Install brickd from Tinkerforge repository and wireless-tools for iwconfig
-RUN apt-get update && \
-	apt-get install -y --no-install-recommends curl gnupg lsb-release ca-certificates git wireless-tools && \
-	curl -fsSL https://download.tinkerforge.com/apt/debian/tinkerforge.gpg -o /usr/share/keyrings/tinkerforge-archive.gpg && \
-	echo "deb [signed-by=/usr/share/keyrings/tinkerforge-archive.gpg] https://download.tinkerforge.com/apt/debian $(lsb_release -cs) main" > /etc/apt/sources.list.d/tinkerforge.list && \
-	apt-get update && apt-get install -y --no-install-recommends brickd && \
-	rm -rf /var/lib/apt/lists/*
+RUN .venv-app/bin/python3 -m pip install -U pip
+RUN .venv-app/bin/python3 -m pip install -U uv
+RUN .venv-app/bin/uv sync --frozen --no-dev
+RUN .venv-app/bin/pip3 install --no-deps -e .
+RUN .venv-app/bin/pip3 install -U paho-mqtt==2.1
+# RUN pip install -U paho-mqtt==2.1
 
-COPY --from=build /tinkerforge2mqtt /tinkerforge2mqtt
-COPY entrypoint.sh /entrypoint.sh
 COPY tinkerforge2mqtt.toml /root/.config/tinkerforge2mqtt/
+COPY brickd.conf /etc/brickd.conf
+COPY entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
 
 LABEL org.opencontainers.image.source="https://github.com/SuiOni/balena-homeassistant" \
 	org.opencontainers.image.description="Tinkerforge to MQTT bridge with brickd" \
@@ -41,4 +59,13 @@ LABEL org.opencontainers.image.source="https://github.com/SuiOni/balena-homeassi
 
 EXPOSE 4223
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Ensure dialout group exists and add root to it so the container can access serial devices
+# (If you run as a different user, replace "root" with that username)
+RUN getent group dialout || groupadd dialout \
+ && usermod -aG dialout root
+
+# ensure script is executable and has a proper shebang
+RUN chmod +x /entrypoint.sh
+# Dpnt need brickd install, conf and usb priviledge, anymore since using tinerforge wifi version.
+# let the base image entrypoint call your script
+CMD ["/entrypoint.sh"]

@@ -3,7 +3,7 @@
 # Note: Insert at least device address + key and your MQTT settings.
 #
 # See README for more information.
-host = "localhost"  # brickd runs inside same container; change if using external host
+host = "${TINKERFORGE_HOST}"  # brickd runs inside same container; change if using external host
 port = 4223          # brickd default exposed via EXPOSE 4223
 callback_period = 1
 
@@ -19,7 +19,7 @@ host = "mqtt"
 port = 1883
 user_name = ""
 password = ""
-main_uid = "Mac"
+main_uid = "rpi"
 publish_config_throttle_seconds = 20
 publish_throttle_seconds = 5
 

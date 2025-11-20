@@ -1,3 +1,4 @@
+# Check where is network_mode: host and possible port conflicts
 version: '2.1'
 volumes:
   config: {}
@@ -22,8 +23,8 @@ services:
     # https://hub.docker.com/r/homeassistant/home-assistant
   homeassistant:
     image: homeassistant/home-assistant:2025.11@sha256:c11dd7c74039223c43079d700aa559d6dc61e8e0b38a08d651f91d1bc550cff5
-    # ports:
-    #   - 8080:8123
+    # ports: Because of network_mode: host no ports are needed
+    #   - 80:8123
     network_mode: host
     volumes:
       - config:/config
@@ -44,12 +45,12 @@ services:
       - /mosquitto/log
 
   # https://esphome.io/guides/getting_started_command_line.html#installation
-  esphome:
-    image: ghcr.io/esphome/esphome:2025.10.4@sha256:d38437b9d7b27166cbb07ad58ccfe9da1d7bb2d9674d036e0529953991ff057e
-    volumes:
-      - esphome:/config
-    privileged: true
-    network_mode: host
+  # esphome:
+  #   image: ghcr.io/esphome/esphome:2025.10.4@sha256:d38437b9d7b27166cbb07ad58ccfe9da1d7bb2d9674d036e0529953991ff057e
+  #   volumes:
+  #     - esphome:/config
+  #   privileged: true
+  #   network_mode: host
 
   tinkerforge2mqtt:
     build: tinkerforge2mqtt
@@ -58,6 +59,16 @@ services:
     ports:
       - 4223:4223
     privileged: true
+    devices:
+      - '/dev:/dev'
+    environment:
+      TINKERFORGE_HOST: "192.168.2.145"
+
+    restart: unless-stopped
+    # udev: true               # optional but recommended for hotplug events
+    # devices:
+    #   - /dev/bus/usb:/dev/bus/usb
+
 
   # https://hub.docker.com/r/codercom/code-server
   # code-server:
@@ -109,11 +120,14 @@ services:
   duplicati:
     image: lscr.io/linuxserver/duplicati:2.1.0@sha256:bc6264d201eefcd2ee9b2dfdac2d4c6937fdbb885e7036b5a01878ff9da159e3
     environment:
-      PUID: "0"
-      PGID: "0"
       CLI_ARGS: --webservice-interface=any
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Etc/UTC"
+      SETTINGS_ENCRYPTION_KEY: "notasecretkey"
+      DUPLICATI__WEBSERVICE_PASSWORD: "notasecretkey"
     ports:
-      - "8200:8200/tcp"
+      - "8200:8200"
     tmpfs:
       - /tmp
     volumes:
@@ -127,54 +141,54 @@ services:
       - netdatalib:/volumes/netdatalib
       - esphome:/volumes/esphome
   
-  pihole:
-    build: pihole
-    cap_add:
-      - SYS_TTY_CONFIG
-      - NET_ADMIN
-    volumes:
-      - "pihole_config:/etc/pihole"
-      - "dnsmasq_config:/etc/dnsmasq.d"
-    dns:
-      - "127.0.0.1"
-      - "1.1.1.1"
-    network_mode: host
-    labels:
-      io.balena.features.dbus: "1"
-    devices:
-      - /dev/tty0
-      - /dev/tty1
-    tmpfs:
-      - /var/log/pihole
-    ports:
-      # DNS Ports
-      - "53:53/tcp"
-      - "53:53/udp"
-      # Default HTTP Port
-      - "80:80/tcp"
-      # Default HTTPs Port. FTL will generate a self-signed certificate
-      - "443:443/tcp"
-      # Uncomment the below if using Pi-hole as your DHCP Server
-      #- "67:67/udp"
-    environment:
-      DNSMASQ_LISTENING: all
-      PIHOLE_DNS_: 1.1.1.1;1.0.0.1
-      FONTFACE: Terminus
-      FONTSIZE: 8x14
-      WEBPASSWORD: balena
-      FTLCONF_webserver_api_password: 'balena'
-      VIRTUAL_HOST: balena-devices.com
-      WEB_BIND_ADDR: 0.0.0.0
-      TZ: 'Europe/Berlin'
-    restart: unless-stopped
+  # pihole:
+  #   build: pihole
+  #   cap_add:
+  #     - SYS_TTY_CONFIG
+  #     - NET_ADMIN
+  #   volumes:
+  #     - "pihole_config:/etc/pihole"
+  #     - "dnsmasq_config:/etc/dnsmasq.d"
+  #   dns:
+  #     - "127.0.0.1"
+  #     - "1.1.1.1"
+  #   network_mode: host
+  #   labels:
+  #     io.balena.features.dbus: "1"
+  #   devices:
+  #     - /dev/tty0
+  #     - /dev/tty1
+  #   tmpfs:
+  #     - /var/log/pihole
+  #   ports:
+  #     # DNS Ports
+  #     - "53:53/tcp"
+  #     - "53:53/udp"
+  #     # Default HTTP Port
+  #     - "80:80/tcp"
+  #     # Default HTTPs Port. FTL will generate a self-signed certificate
+  #     - "443:443/tcp"
+  #     # Uncomment the below if using Pi-hole as your DHCP Server
+  #     #- "67:67/udp"
+  #   environment:
+  #     DNSMASQ_LISTENING: all
+  #     PIHOLE_DNS_: 1.1.1.1;1.0.0.1
+  #     FONTFACE: Terminus
+  #     FONTSIZE: 8x14
+  #     WEBPASSWORD: balena
+  #     FTLCONF_webserver_api_password: 'balena'
+  #     VIRTUAL_HOST: balena-devices.com
+  #     WEB_BIND_ADDR: 0.0.0.0
+  #     TZ: 'Europe/Berlin'
+  #   restart: unless-stopped
 
-  unbound:
-    build: unbound
-    cap_add:
-     - NET_ADMIN
-    ports:
-      - "5053:5053/tcp"
-      - "5053:5053/udp"
+  # unbound:
+  #   build: unbound
+  #   cap_add:
+  #    - NET_ADMIN
+  #   ports:
+  #     - "5053:5053/tcp"
+  #     - "5053:5053/udp"
 
   # https://github.com/balenablocks/hostname
   # https://hub.balena.io/blocks/1918776/hostname-rpi
@@ -184,7 +198,7 @@ services:
     labels:
       io.balena.features.supervisor-api: 1
     environment:
-      SET_HOSTNAME: pihole
+      SET_HOSTNAME: peepee
 
   # https://hub.docker.com/r/tailscale/tailscale
   # https://github.com/tailscale/tailscale/blob/main/cmd/containerboot/main.go
@@ -193,53 +207,55 @@ services:
   # https://tailscale.com/kb/1241/tailscale-up
   # https://tailscale.com/kb/1242/tailscale-serve
   # https://tailscale.com/kb/1311/tailscale-funnel
-  tailscale:
-    image: tailscale/tailscale:v1.90.6@sha256:8eb8b450a85856807e8a216c4697333e15f8701cb6d344bed851bf6aa6a9605c
-    environment:
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_SOCKET: /var/run/tailscale/tailscaled.sock
-      TS_USERSPACE: false
-      TS_AUTH_ONCE: false
-      TS_HOSTNAME: homeassistant
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-      - SYS_MODULE
-    labels:
-      io.balena.features.kernel-modules: 1
-    tmpfs:
-      - /tmp
-      - /run
-    volumes:
-      - tailscale:/var/lib/tailscale
-    entrypoint:
-      - /bin/sh
-      - -c
-    command:
-      - |
-        modprobe tun || true
-        modprobe wireguard || true
-        mkdir -p /dev/net
-        [ ! -c /dev/net/tun ] && mknod /dev/net/tun c 10 200
-        /usr/local/bin/containerboot
+  # tailscale:
+  #   image: tailscale/tailscale:v1.90.6@sha256:8eb8b450a85856807e8a216c4697333e15f8701cb6d344bed851bf6aa6a9605c
+  #   environment:
+  #     TS_STATE_DIR: /var/lib/tailscale
+  #     TS_SOCKET: /var/run/tailscale/tailscaled.sock
+  #     TS_USERSPACE: false
+  #     TS_AUTH_ONCE: false
+  #     TS_HOSTNAME: homeassistant
+  #     TS_AUTHKEY: ${TS_AUTHKEY}
+  #     TS_EXTRA_ARGS: --advertise-tags=tag:container --accept-routes=false --advertise-exit-node=false
+  #   network_mode: host
+  #   cap_add:
+  #     - NET_ADMIN
+  #     - NET_RAW
+  #     - SYS_MODULE
+  #   labels:
+  #     io.balena.features.kernel-modules: 1
+  #   tmpfs:
+  #     - /tmp
+  #     - /run
+  #   volumes:
+  #     - tailscale:/var/lib/tailscale
+  #   entrypoint:
+  #     - /bin/sh
+  #     - -c
+  #   command:
+  #     - |
+  #       modprobe tun || true
+  #       modprobe wireguard || true
+  #       mkdir -p /dev/net
+  #       [ ! -c /dev/net/tun ] && mknod /dev/net/tun c 10 200
+  #       /usr/local/bin/containerboot
 
-  netdata:
-    image: netdata/netdata:v2.7.3@sha256:c6b5012b08e6a67d513c75858fe4db88a30eaa7b383656e6ef2e09b9cf0a9333
-    privileged: true
-    network_mode: host
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - apparmor:unconfined
-    labels:
-      io.balena.features.balena-socket: 1
-      io.balena.features.procfs: 1
-      io.balena.features.supervisor-api: 1
-      io.balena.features.sysfs: 1
-    volumes:
-      - netdatalib:/var/lib/netdata
-      - netdatacache:/var/cache/netdata
-    environment:
-      DOCKER_HOST: "/var/run/balena.sock"
-      PGID: "991" # ls -nd /var/run/balena.sock | awk '{print $4}'
+  # netdata:
+  #   image: netdata/netdata:v2.7.3@sha256:c6b5012b08e6a67d513c75858fe4db88a30eaa7b383656e6ef2e09b9cf0a9333
+  #   privileged: true
+  #   network_mode: host
+  #   cap_add:
+  #     - SYS_PTRACE
+  #   security_opt:
+  #     - apparmor:unconfined
+  #   labels:
+  #     io.balena.features.balena-socket: 1
+  #     io.balena.features.procfs: 1
+  #     io.balena.features.supervisor-api: 1
+  #     io.balena.features.sysfs: 1
+  #   volumes:
+  #     - netdatalib:/var/lib/netdata
+  #     - netdatacache:/var/cache/netdata
+  #   environment:
+  #     DOCKER_HOST: "/var/run/balena.sock"
+  #     PGID: "991" # ls -nd /var/run/balena.sock | awk '{print $4}'
