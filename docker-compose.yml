@@ -19,6 +19,7 @@ volumes:
   netdatacache: {}
   esphome: {}
   matter-server: {}
+  backups: {}          # added volume for duplicati backup target
 services:
     # https://hub.docker.com/r/homeassistant/home-assistant
   homeassistant:
@@ -132,6 +133,7 @@ services:
       - /tmp
     volumes:
       - duplicati:/config
+      - backups:/backups      # added mount point for backup destination
       - config:/volumes/config
       - influxdb-data:/volumes/influxdb-data
       - influxdb-config:/volumes/influxdb-config
