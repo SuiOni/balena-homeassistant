@@ -1,0 +1,42 @@
+{
+  "version" : 10,
+  "timestamp" : 1770551588165,
+  "serviceEnvironment" : "LIVE",
+  "registered" : true,
+  "number" : "+4915120204977",
+  "username" : "sasa.257",
+  "encryptedDeviceName" : "CiEFIaDchTiCo7Dre4LjObdJQBvHDrIrror8BF423EWrZHsSENqDQCW6IDEmX3cxbM1sCKUaCijH23l2pnQnH7c=",
+  "deviceId" : 3,
+  "isMultiDevice" : true,
+  "password" : "wGX5a3hbc6oysKfcn6mjDzR4",
+  "aciAccountData" : {
+    "serviceId" : "47ca12fa-211a-45ec-b74f-314f05b16597",
+    "registrationId" : 11939,
+    "identityPrivateKey" : "8K3GEO3K964madzyD/i3Ea4zs5nj2m5XrQ+EC3Ee1Fc=",
+    "identityPublicKey" : "BfvYHCevleCJWh43YV+JQp40JymC9KoWKh4Ndmq7NE1m",
+    "nextPreKeyId" : 15472112,
+    "nextSignedPreKeyId" : 15001415,
+    "activeSignedPreKeyId" : 15001414,
+    "nextKyberPreKeyId" : 12428528,
+    "activeLastResortKyberPreKeyId" : 12428427
+  },
+  "pniAccountData" : {
+    "serviceId" : "PNI:67b6f179-2e7f-450a-ad66-8c80f3869931",
+    "registrationId" : 13070,
+    "identityPrivateKey" : "IF8FIm7KmsGZvoEwKCFUNNOFXeRpHcDEI1VepiqU1UA=",
+    "identityPublicKey" : "BQr1JOI25dUIetwexNNRjFiwez1q89eA3GWY0go/E6BS",
+    "nextPreKeyId" : 4749576,
+    "nextSignedPreKeyId" : 1881884,
+    "activeSignedPreKeyId" : 1881883,
+    "nextKyberPreKeyId" : 9258402,
+    "activeLastResortKyberPreKeyId" : 9258301
+  },
+  "registrationLockPin" : null,
+  "pinMasterKey" : null,
+  "storageKey" : null,
+  "accountEntropyPool" : "bi1clg02kq4ov6q7hy6uwftke7z1acjo5yqlwd7jrbev9nkogsj7aoyq0nxxnmit",
+  "mediaRootBackupKey" : "bbCqbF5p6LHoUMXxquivJwaR+mzczB4f+xZWpKBSSgU=",
+  "profileKey" : "XEgEe4pYk/dSqcKTQExNxkgN6AHoS+WtRr3gBMYoQEM=",
+  "usernameLinkEntropy" : "7Qn/DNjEGh4H4bA51DNOzCH8Q/gRPcFfSss+yOV5aMA=",
+  "usernameLinkServerId" : "16724105-1e30-42d2-9965-ffb0f080b85f"
+}

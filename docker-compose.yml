@@ -4,6 +4,7 @@ volumes:
   config: {}
   mosquitto:
   pihole_config: {}
+  signal_config: {}
   dnsmasq_config: {}
   tailscale: {}
   influxdb-data: {}
@@ -23,7 +24,7 @@ volumes:
 services:
     # https://hub.docker.com/r/homeassistant/home-assistant
   homeassistant:
-    image: homeassistant/home-assistant:2025.11@sha256:c11dd7c74039223c43079d700aa559d6dc61e8e0b38a08d651f91d1bc550cff5
+    build: homeassistant
     # ports: Because of network_mode: host no ports are needed
     #   - 80:8123
     network_mode: host
@@ -92,28 +93,29 @@ services:
 
   # https://hub.docker.com/_/influxdb
   # https://www.home-assistant.io/integrations/influxdb/
-  influxdb:
-    image: influxdb:2.7.12-alpine@sha256:b4dbe25bb8f8be38f9cf5a12cbca453318a1ad3475954e9d37c38f6e5bc5006b
-    environment:
-      DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: homeassistant
-      DOCKER_INFLUXDB_INIT_PASSWORD: homeassistant # changeme via fleet/device env vars
-      DOCKER_INFLUXDB_INIT_ORG: homeassistant
-      DOCKER_INFLUXDB_INIT_BUCKET: homeassistant
-      DOCKER_INFLUXDB_INIT_RETENTION: 90d
-    volumes:
-      - influxdb-data:/var/lib/influxdb2
-      - influxdb-config:/etc/influxdb2
-    ports:
-      - 127.0.0.1:8086:8086
+
+  # influxdb:
+  #   image: influxdb:2.7.12-alpine@sha256:b4dbe25bb8f8be38f9cf5a12cbca453318a1ad3475954e9d37c38f6e5bc5006b
+  #   environment:
+  #     DOCKER_INFLUXDB_INIT_MODE: setup
+  #     DOCKER_INFLUXDB_INIT_USERNAME: homeassistant
+  #     DOCKER_INFLUXDB_INIT_PASSWORD: homeassistant # changeme via fleet/device env vars
+  #     DOCKER_INFLUXDB_INIT_ORG: homeassistant
+  #     DOCKER_INFLUXDB_INIT_BUCKET: homeassistant
+  #     DOCKER_INFLUXDB_INIT_RETENTION: 90d
+  #   volumes:
+  #     - influxdb-data:/var/lib/influxdb2
+  #     - influxdb-config:/etc/influxdb2
+  #   ports:
+  #     - 8086:8086
 
   # https://hub.docker.com/r/grafana/grafana
-  grafana:
-    image: grafana/grafana:12.2.0-16895479002@sha256:f318a84587ee2ba9b3d9e733003523cf300be245343f5b890debcdd48c397046
-    volumes:
-      - grafana:/var/lib/grafana
-    ports:
-      - 3000:3000/tcp
+  # grafana:
+  #   image: grafana/grafana:12.2.0-16895479002@sha256:f318a84587ee2ba9b3d9e733003523cf300be245343f5b890debcdd48c397046
+  #   volumes:
+  #     - grafana:/var/lib/grafana
+  #   ports:
+  #     - 3000:3000/tcp
 
   # https://fleet.linuxserver.io/image?name=linuxserver/duplicati
   # https://docs.linuxserver.io/images/docker-duplicati/
@@ -122,8 +124,8 @@ services:
     image: lscr.io/linuxserver/duplicati:2.1.0@sha256:bc6264d201eefcd2ee9b2dfdac2d4c6937fdbb885e7036b5a01878ff9da159e3
     environment:
       CLI_ARGS: --webservice-interface=any
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "0"
+      PGID: "0"
       TZ: "Etc/UTC"
       SETTINGS_ENCRYPTION_KEY: "notasecretkey"
       DUPLICATI__WEBSERVICE_PASSWORD: "notasecretkey"
@@ -142,6 +144,12 @@ services:
       - tailscale:/volumes/tailscale
       - netdatalib:/volumes/netdatalib
       - esphome:/volumes/esphome
+      - signal_config:/volumes/signal_config
+  #    - pihole_config:/volumes/pihole_config
+  #    - dnsmasq_config:/volumes/dnsmasq_config
+  #    - frigate-config:/volumes/frigate-config
+  #    - frigate-media:/volumes/frigate-media
+  #    - wyze-tokens:/volumes/wyze-tokens
   
   # pihole:
   #   build: pihole
@@ -209,38 +217,49 @@ services:
   # https://tailscale.com/kb/1241/tailscale-up
   # https://tailscale.com/kb/1242/tailscale-serve
   # https://tailscale.com/kb/1311/tailscale-funnel
-  # tailscale:
-  #   image: tailscale/tailscale:v1.90.6@sha256:8eb8b450a85856807e8a216c4697333e15f8701cb6d344bed851bf6aa6a9605c
-  #   environment:
-  #     TS_STATE_DIR: /var/lib/tailscale
-  #     TS_SOCKET: /var/run/tailscale/tailscaled.sock
-  #     TS_USERSPACE: false
-  #     TS_AUTH_ONCE: false
-  #     TS_HOSTNAME: homeassistant
-  #     TS_AUTHKEY: ${TS_AUTHKEY}
-  #     TS_EXTRA_ARGS: --advertise-tags=tag:container --accept-routes=false --advertise-exit-node=false
-  #   network_mode: host
-  #   cap_add:
-  #     - NET_ADMIN
-  #     - NET_RAW
-  #     - SYS_MODULE
-  #   labels:
-  #     io.balena.features.kernel-modules: 1
-  #   tmpfs:
-  #     - /tmp
-  #     - /run
-  #   volumes:
-  #     - tailscale:/var/lib/tailscale
-  #   entrypoint:
-  #     - /bin/sh
-  #     - -c
-  #   command:
-  #     - |
-  #       modprobe tun || true
-  #       modprobe wireguard || true
-  #       mkdir -p /dev/net
-  #       [ ! -c /dev/net/tun ] && mknod /dev/net/tun c 10 200
-  #       /usr/local/bin/containerboot
+
+  signal:
+    build: signal
+    environment:
+      - MODE=normal #supported modes: json-rpc, native, normal
+      #- AUTO_RECEIVE_SCHEDULE=0 22 * * * #enable this parameter on demand (see description below)
+    ports:
+      - 8080:8080 #map docker port 8080 to host port 8080.
+    volumes:
+      - signal_config:/home/.local/share/signal-cli #map "signal-cli-config" folder on host system into docker container. the folder contains the password and cryptographic keys when a new number is registered
+
+  tailscale:
+    image: tailscale/tailscale:v1.90.6@sha256:8eb8b450a85856807e8a216c4697333e15f8701cb6d344bed851bf6aa6a9605c
+    environment:
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_USERSPACE: false
+      TS_AUTH_ONCE: false
+      TS_HOSTNAME: homeassistant
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container --accept-routes=false --advertise-exit-node=false
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_MODULE
+    labels:
+      io.balena.features.kernel-modules: 1
+    tmpfs:
+      - /tmp
+      - /run
+    volumes:
+      - tailscale:/var/lib/tailscale
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - |
+        modprobe tun || true
+        modprobe wireguard || true
+        mkdir -p /dev/net
+        [ ! -c /dev/net/tun ] && mknod /dev/net/tun c 10 200
+        /usr/local/bin/containerboot
 
   # netdata:
   #   image: netdata/netdata:v2.7.3@sha256:c6b5012b08e6a67d513c75858fe4db88a30eaa7b383656e6ef2e09b9cf0a9333
