@@ -37,6 +37,11 @@ rest_command:
     method: GET
     headers:
       User-Agent: "Mozilla/5.0 (Home Assistant)"
+  wikiquote:
+    url: "https://en.wikiquote.org/w/api.php?action=parse&page={{ author }}&prop=wikitext&format=json&redirects=1"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0 (Home Assistant)"
 
 
 automation: !include automations.yaml

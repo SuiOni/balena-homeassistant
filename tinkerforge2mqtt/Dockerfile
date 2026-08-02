@@ -31,7 +31,7 @@ RUN apt-get update && \
 # Install build dependencies only
 RUN git clone --branch main https://github.com/SuiOni/tinkerforge2mqtt.git /tinkerforge2mqtt && \
     cd /tinkerforge2mqtt && \
-    git checkout 980fd83
+    git checkout bed7773
 WORKDIR /tinkerforge2mqtt
 # Bootstrap project virtual environment via provided CLI (creates .venv-app)
 RUN ./cli.py --help || true
