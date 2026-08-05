@@ -1,0 +1,29 @@
+- alias: Gerhard Hanloser - neuer Artikel
+  description: Benachrichtigt taeglich ueber neue Artikel von Gerhard Hanloser bei junge Welt. Optional kann beim manuellen Ausloesen date im Format DD.MM.YYYY uebergeben werden.
+  variables:
+    check_date: "{{ date | default(now().strftime('%d.%m.%Y'), true) }}"
+  triggers:
+    - trigger: time
+      at: "23:59:00"
+  actions:
+    - action: rest_command.jungewelt_gerhard_hanloser
+      response_variable: resp
+    - variables:
+        html: "{{ resp.content if resp.content is string else resp.content | string }}"
+        article: >-
+          {% set matches = html | regex_findall('(?s)<li[^>]+id="a_[^"]+"[^>]*>.*?<div class="text-neutral-400 text-base">' ~ check_date ~ '</div>.*?<div class="text-3xl[^>]*"><a href="([^"]+)"[^>]*>(.*?)</a>') %}
+          {% if matches %}
+            {% set first = matches | first %}
+            {{ {'url': first[0], 'title': first[1] | regex_replace('<[^>]+>', '') | trim} | tojson }}
+          {% endif %}
+    - condition: template
+      value_template: "{{ article | trim != '' }}"
+    - variables:
+        article_data: "{{ article | from_json }}"
+    - action: notify.signal
+      data:
+        message: >-
+          Neuer Artikel von Gerhard Hanloser, lesenswert:
+          {{ article_data.title }}
+          https://www.jungewelt.de{{ article_data.url }}
+  mode: single

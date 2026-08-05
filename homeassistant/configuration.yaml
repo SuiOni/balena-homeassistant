@@ -42,6 +42,11 @@ rest_command:
     method: GET
     headers:
       User-Agent: "Mozilla/5.0 (Home Assistant)"
+  jungewelt_gerhard_hanloser:
+    url: "https://www.jungewelt.de/autor/512"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0 (Home Assistant)"
 
 
 automation: !include automations.yaml
