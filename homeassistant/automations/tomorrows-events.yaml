@@ -26,8 +26,6 @@
       value_template: "{{ (admin_events | count > 0) or (bdays | count > 0) }}"
     - action: notify.signal
       data:
-        data:
-          text_mode: styled
         message: |-
           *Tomorrows Agenda:* 
             {% if admin_events | count > 0 -%}

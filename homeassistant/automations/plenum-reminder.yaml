@@ -20,8 +20,6 @@
            | list | count > 0 }}
     - action: notify.signal
       data:
-        data:
-          text_mode: styled
         message: >-
           📝 *Reminder:* For tomorrow's Plenum, write the Topics here:
           https://wiki.minhagalera.de/doc/tops-WIksMzyC7Q  ❌ *React:* with a red
