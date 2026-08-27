@@ -1,0 +1,27 @@
+- alias: DMX color (ON/OFF)
+  description: Changes DMX on/off
+  triggers:
+    - trigger: time_pattern
+      minutes: "5"
+  actions:
+    - choose:
+        - conditions:
+            - condition: time
+              after: "06:30:00"
+              before: "23:59:00"
+          sequence:
+            - target:
+                entity_id: light.dmx_bricklet_ejk_dmx_light_2
+              action: light.turn_on
+              data:
+                rgbw_color:
+                  - 250
+                  - 20
+                  - 10
+                  - 0
+                brightness: 50
+      default:
+        - target:
+            entity_id: light.dmx_bricklet_ejk_dmx_light_2
+          action: light.turn_off
+  mode: single

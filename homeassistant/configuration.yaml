@@ -2,6 +2,9 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
+homeassistant:
+  time_zone: Europe/Berlin
+
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
@@ -22,7 +25,7 @@ notify:
     recipients:                  # one or more default recipients
       - "group.bXh2QWNLdGYxRTRpV0h4SjJlY1pzVXJVNGZTU3llU1dMaXMrT0d6NGlObz0="
 
-  - name: signal_d44
+  - name: signal_artikelalarm
     platform: signal_messenger
     url: "http://127.0.0.1:8080" # URL where the Signal Messenger REST API is listening
     number: "+4915120204977"     # sender number (Signal account)
@@ -33,6 +36,9 @@ notify:
 
 
 rest_command:
+  awb_trash_calender_d44:
+    url: "https://www.awbkoeln.de/api/calendar?building_number=44&street_code=777&start_year=2026&end_year=2040&start_month=1&end_month=12&form=json"
+    method: GET
   signal_send:
     url: "http://127.0.0.1:8080/v2/send"
     method: POST
@@ -64,8 +70,20 @@ rest_command:
     method: GET
     headers:
       User-Agent: "Mozilla/5.0 (Home Assistant)"
+  taz_karim_el_gawhary:
+    url: "https://taz.de/Karim-El-Gawhary/!a246/"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0 (Home Assistant)"
+
+shell_command:
+  nd_aktuell_author_search: >-
+    /usr/local/bin/nd-aktuell-search '{{ author_query }}'
 
 
-automation: !include automations.yaml
+
+
+
+automation: !include_dir_merge_list automations
 script: !include scripts.yaml
 scene: !include scenes.yaml

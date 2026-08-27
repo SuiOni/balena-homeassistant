@@ -1,0 +1,28 @@
+- alias: Karim El-Gawhary neue taz Artikel
+  description: >-
+    Benachrichtigt taeglich ueber neue Artikel von Karim El-Gawhary bei der taz.
+    Beim manuellen Ausloesen kann date im Format YYYY-MM-DD uebergeben werden.
+  triggers:
+    - trigger: time
+      at: "23:59:00"
+  actions:
+    - action: rest_command.taz_karim_el_gawhary
+      response_variable: response
+    - variables:
+        html: "{{ response.content if response.content is string else response.content | string }}"
+        articles: >-
+          {{ html | regex_findall('(?s)<article\\b.*?<a href="([^"]+)"[^>]*class="columns teaser-link[^\"]*"[^>]*>.*?<span class="is-block headline[^\"]*">\\s*(.*?)\\s*</span>.*?<time datetime="([^"]+)"') }}
+    - repeat:
+        for_each: "{{ articles }}"
+        sequence:
+          - condition: template
+            value_template: "{{ repeat.item[2] == check_date }}"
+          - action: notify.signal_artikelalarm
+            data:
+              message: >-
+                Neuer Artikel von Karim El-Gawhary, lesenswert:
+                {{ repeat.item[1] | regex_replace('<[^>]+>', '') | trim }}
+                https://taz.de{{ repeat.item[0] }}
+  variables:
+    check_date: "{{ date | default(now().strftime('%Y-%m-%d'), true) }}"
+  mode: single

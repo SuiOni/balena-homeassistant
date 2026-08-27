@@ -1,0 +1,47 @@
+- alias: Send Signal Notification for Tomorrow's Events
+  description: Triggers at 22:00 to send tomorrow's calendar events and Plenum reminder
+  triggers:
+    - at: "21:30:00"
+      trigger: time
+  actions:
+    - action: calendar.get_events
+      target:
+        entity_id:
+          - calendar.geburtstage_jonny
+          - calendar.talmuhle_admin
+      data:
+        start_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00') }}"
+        end_date_time: "{{ (now() + timedelta(days=2)).strftime('%Y-%m-%d 00:00:00') }}"
+      response_variable: agenda
+    - variables:
+        admin_events: |-
+          {{ agenda["calendar.talmuhle_admin"].events
+             | rejectattr('summary', 'search', skip_marker)
+             | list | sort(attribute='start') }}
+        bdays: |-
+          {{ agenda["calendar.geburtstage_jonny"].events
+             | rejectattr('summary', 'search', skip_marker)
+             | list | sort(attribute='start') }}
+    - condition: template
+      value_template: "{{ (admin_events | count > 0) or (bdays | count > 0) }}"
+    - action: notify.signal
+      data:
+        data:
+          text_mode: styled
+        message: |-
+          *Tomorrows Agenda:* 
+            {% if admin_events | count > 0 -%}
+              {%- for event in admin_events %}
+                - {{ event.summary }}
+              {%- endfor %}
+            {%- else -%} No administrative events. {%- endif %}
+  
+          *Birthdays:* 
+            {% if bdays | count > 0 -%}
+              {%- for event in bdays %}
+                🎂 {{ event.summary }}
+              {%- endfor %}
+            {%- else -%} No birthdays tomorrow. {%- endif %}
+  variables:
+    skip_marker: "[silent]"
+  mode: single

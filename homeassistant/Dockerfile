@@ -5,8 +5,11 @@ FROM homeassistant/home-assistant:2025.11@sha256:c11dd7c74039223c43079d700aa559d
 # build time. Stage the repo-managed config outside /config and overlay it on
 # every boot via the entrypoint wrapper (see entrypoint.sh).
 COPY configuration.yaml /usr/src/ha-config/configuration.yaml
+COPY automations /usr/src/ha-config/automations
+COPY nd-aktuell-search.sh /usr/local/bin/nd-aktuell-search
 COPY entrypoint.sh /usr/local/bin/ha-entrypoint.sh
-RUN chmod +x /usr/local/bin/ha-entrypoint.sh
+RUN apk add --no-cache curl \
+	&& chmod +x /usr/local/bin/ha-entrypoint.sh /usr/local/bin/nd-aktuell-search
 
 ENTRYPOINT ["/usr/local/bin/ha-entrypoint.sh"]
 

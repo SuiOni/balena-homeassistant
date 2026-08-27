@@ -1,0 +1,19 @@
+- alias: "Signal: 1h Event Reminder"
+  description: Sends a Signal message 1h before non-all-day events
+  triggers:
+    - trigger: calendar
+      event: start
+      offset: "-00:59:00"
+      entity_id: calendar.talmuhle_admin
+  conditions:
+    - condition: template
+      value_template: "{{ not trigger.calendar_event.all_day }}"
+  actions:
+    - action: notify.signal
+      data:
+        message: >-
+          🔔 *Reminder:* "{{ trigger.calendar_event.summary }}" starts in 1h
+          minutes. {%- if trigger.calendar_event.location %} 📍 *Location*: "{{
+          trigger.calendar_event.location }}" {%- endif %}
+  mode: parallel
+  max: 10

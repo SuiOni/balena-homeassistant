@@ -1,0 +1,41 @@
+- alias: ND Aktuell neue Artikel
+  description: >-
+    Benachrichtigt taeglich ueber neue Artikel der konfigurierten Autorinnen und
+    Autoren bei nd-aktuell. Beim manuellen Ausloesen kann date im Format
+    YYYY-MM-DD uebergeben werden.
+  triggers:
+    - trigger: time
+      at: "23:59:00"
+  actions:
+    - repeat:
+        for_each: "{{ authors }}"
+        sequence:
+          - variables:
+              author_name: "{{ repeat.item.name }}"
+          - action: shell_command.nd_aktuell_author_search
+            data:
+              author_query: "{{ repeat.item.query }}"
+            response_variable: search_response
+          - variables:
+              html: "{{ search_response.stdout | default('', true) }}"
+              articles: >-
+                {{ html | regex_findall('(?s)<article\\b.*?<h3[^>]*><a href="([^"?]+)[^"]*"[^>]*>(.*?)</a>.*?<time datetime="([^"]+)"') }}
+          - repeat:
+              for_each: "{{ articles }}"
+              sequence:
+                - condition: template
+                  value_template: "{{ repeat.item[2] == check_date }}"
+                - action: notify.signal_artikelalarm
+                  data:
+                    message: >-
+                      Neuer Artikel von {{ author_name }}, lesenswert:
+                      {{ repeat.item[1] | regex_replace('<[^>]+>', '') | trim }}
+                      https://www.nd-aktuell.de{{ repeat.item[0] }}
+  variables:
+    check_date: "{{ date | default(now().strftime('%Y-%m-%d'), true) }}"
+    authors:
+      - name: Gerhard Hanloser
+        query: gerhard%20hanloser
+      - name: Peter Nowak
+        query: peter%20nowak
+  mode: single

@@ -1,0 +1,32 @@
+- alias: D44 Muellabholung Erinnerung
+  description: Benachrichtigt um 21:45 Uhr ueber die fuer morgen bereitzustellenden Tonnen.
+  triggers:
+    - trigger: time
+      at: "21:45:00"
+  actions:
+    - action: rest_command.awb_trash_calender_d44
+      response_variable: response
+    - variables:
+        calendar: "{{ response.content | from_json }}"
+        collection_types: >-
+          {% set collection_date = now().date() + timedelta(days=1) %}
+          {{ calendar.data | default([], true)
+             | selectattr('year', 'eq', collection_date.year)
+             | selectattr('month', 'eq', collection_date.month)
+             | selectattr('day', 'eq', collection_date.day)
+             | map(attribute='type')
+             | list }}
+    - condition: template
+      value_template: "{{ collection_types | count > 0 }}"
+    - action: notify.signal_d44
+      data:
+        message: >-
+          {% set names = {
+            'blue': 'Papiertonne',
+            'grey': 'Restmuelltonne',
+            'brown': 'Biotonne',
+            'wertstoff': 'Wertstofftonne',
+            'xmastree': 'Weihnachtsbaum'
+          } %}
+          🤖 Beep boop. Hier ist euer Haus-Bot: Bitte morgen rausstellen: {% for collection_type in collection_types %}{{ names.get(collection_type, collection_type) }}{% if not loop.last %}, {% endif %}{% endfor %}. Danke, Menschen. Ende der Durchsage. 🤖
+  mode: single

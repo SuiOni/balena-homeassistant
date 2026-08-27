@@ -1,0 +1,29 @@
+- alias: Send Signal Plenum Reminder
+  description: Triggers at 15:00 to send tomorrow's plenum reminder (only if Plenum found)
+  triggers:
+    - at: "15:00:00"
+      trigger: time
+  conditions: []
+  actions:
+    - action: calendar.get_events
+      target:
+        entity_id:
+          - calendar.talmuhle_admin
+      data:
+        start_date_time: "{{ (now() + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00') }}"
+        end_date_time: "{{ (now() + timedelta(days=2)).strftime('%Y-%m-%d 00:00:00') }}"
+      response_variable: agenda
+    - condition: template
+      value_template: |-
+        {{ agenda["calendar.talmuhle_admin"].events
+           | selectattr('summary', 'search', 'Plenum Talmühle')
+           | list | count > 0 }}
+    - action: notify.signal
+      data:
+        data:
+          text_mode: styled
+        message: >-
+          📝 *Reminder:* For tomorrow's Plenum, write the Topics here:
+          https://wiki.minhagalera.de/doc/tops-WIksMzyC7Q  ❌ *React:* with a red
+          cross, if you can not participate.
+  mode: single
