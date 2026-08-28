@@ -42,7 +42,7 @@ Our project's docker-compose file creates a persistent volume on your disk/SD ca
 
 The `audio-stream` service captures the USB microphone through ALSA and serves a live Ogg/Opus stream. Open `http://<device-ip>:8088/usb-mic.ogg` in VLC using **Media > Open Network Stream**. The embedded HTTP server supports one listener at a time.
 
-The service uses ALSA's `default` capture device. If it selects the wrong microphone, change `AUDIO_DEVICE` in `docker-compose.yml` to the USB device reported by `arecord -l`, for example `plughw:1,0`, and redeploy. The service logs show the detected input or ALSA errors.
+The service automatically selects the first ALSA capture device, normally the USB microphone. It remains running while no microphone is attached, checks again every five seconds, and resumes streaming after a microphone is connected or reconnected. To select a specific device, set `AUDIO_DEVICE` in `docker-compose.yml` to the device reported by `arecord -l`, for example `plughw:1,0`, and redeploy. The service logs show the selected input or ALSA errors.
 
 ## Configuring Home Assistant
 A text editor called Hass-Configurator is available locally on port 3218. (To access this: http://192.168.1.120:3218 - but substitute the local IP address of your Home Assistant) Using this editor, you can make changes to the Home Assistant configuration file `configuration.yaml` which is the in the default folder `hass-config` for Hass-Configurator. (`hass-config` is mapped to `/config`)

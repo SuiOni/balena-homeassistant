@@ -52,7 +52,7 @@ services:
     devices:
       - /dev/snd:/dev/snd
     environment:
-      AUDIO_DEVICE: default
+      AUDIO_DEVICE: auto
       AUDIO_PORT: 8088
       AUDIO_BITRATE: 48k
     ports:
