@@ -7,7 +7,7 @@
     - action: rest_command.awb_trash_calender_d44
       response_variable: response
     - variables:
-        calendar: "{{ response.content | from_json }}"
+        calendar: "{{ response.content }}"
         collection_types: >-
           {% set collection_date = now().date() + timedelta(days=1) %}
           {{ calendar.data | default([], true)

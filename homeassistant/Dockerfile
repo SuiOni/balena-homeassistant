@@ -9,6 +9,7 @@ COPY automations /usr/src/ha-config/automations
 COPY nd-aktuell-search.sh /usr/local/bin/nd-aktuell-search
 COPY entrypoint.sh /usr/local/bin/ha-entrypoint.sh
 RUN apk add --no-cache curl \
+	&& cat /usr/src/ha-config/automations/*.yaml > /usr/src/ha-config/automations.yaml \
 	&& chmod +x /usr/local/bin/ha-entrypoint.sh /usr/local/bin/nd-aktuell-search
 
 ENTRYPOINT ["/usr/local/bin/ha-entrypoint.sh"]

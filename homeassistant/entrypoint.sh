@@ -10,9 +10,8 @@ if [ -f /usr/src/ha-config/configuration.yaml ]; then
   cp /usr/src/ha-config/configuration.yaml /config/configuration.yaml
 fi
 
-if [ -d /usr/src/ha-config/automations ]; then
-  rm -rf /config/automations
-  cp -R /usr/src/ha-config/automations /config/automations
+if [ ! -e /config/automations.yaml ] && [ -f /usr/src/ha-config/automations.yaml ]; then
+  cp /usr/src/ha-config/automations.yaml /config/automations.yaml
 fi
 
 exec /init "$@"
