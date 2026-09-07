@@ -1,11 +1,15 @@
 - alias: ND Aktuell neue Artikel
   description: >-
     Benachrichtigt taeglich ueber neue Artikel der konfigurierten Autorinnen und
-    Autoren bei nd-aktuell. Beim manuellen Ausloesen kann date im Format
-    YYYY-MM-DD uebergeben werden.
+    Autoren bei nd-aktuell. Zum manuellen Debuggen kann das Ereignis
+    nd_aktuell_author_debug mit date im Format YYYY-MM-DD ausgeloest werden.
   triggers:
     - trigger: time
       at: "23:59:00"
+      id: schedule
+    - trigger: event
+      event_type: nd_aktuell_author_debug
+      id: manual
   actions:
     - repeat:
         for_each: "{{ authors }}"
@@ -32,7 +36,12 @@
                       {{ repeat.item[1] | regex_replace('<[^>]+>', '') | trim }}
                       https://www.nd-aktuell.de{{ repeat.item[0] }}
   variables:
-    check_date: "{{ date | default(now().strftime('%Y-%m-%d'), true) }}"
+    check_date: >-
+      {% if trigger.id == 'manual' %}
+        {{ trigger.event.data.date | default(now().strftime('%Y-%m-%d'), true) | trim }}
+      {% else %}
+        {{ now().strftime('%Y-%m-%d') }}
+      {% endif %}
     authors:
       - name: Gerhard Hanloser
         query: gerhard%20hanloser

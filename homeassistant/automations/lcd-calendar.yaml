@@ -1,0 +1,47 @@
+- alias: WebDAV Kalender -> LCD Text
+  description: WebDAV Update LCD Text sorted by date
+  triggers:
+    - minutes: /15
+      trigger: time_pattern
+  conditions: []
+  actions:
+    - target:
+        entity_id:
+          - calendar.geburtstage_jonny
+          - calendar.talmuhle_admin
+      data:
+        duration:
+          hours: 175
+      response_variable: agenda
+      action: calendar.get_events
+    - target:
+        entity_id: text.lcd_128x64_bricklet_kyd_lcd_display_2
+      data:
+        value: >-
+          {%- set nl = '\n' -%} Minha Events in 7 Days {%- set minha =
+          agenda["calendar.talmuhle_admin"].events | sort(attribute='start') -%}
+          {%- if minha -%}
+            {%- for event in minha -%}
+              {%- set dt = as_datetime(event.start) -%}
+              {%- if dt -%}
+                {{ nl }} {{ as_local(dt).strftime('%d.%m') }}: {{ event.summary }}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- else -%}
+            {{ nl }} Kein naechster Termin
+          {%- endif -%}
+
+          {{ nl }}Birthdays {%- set bdays =
+          agenda["calendar.geburtstage_jonny"].events | sort(attribute='start')
+          -%} {%- if bdays -%}
+            {%- for event in bdays -%}
+              {%- set dt = as_datetime(event.start) -%}
+              {%- if dt -%}
+                {{ nl }} {{ as_local(dt).strftime('%d.%m') }}: {{ event.summary }}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- else -%}
+            {{ nl }} Keine Geburtstage :(
+          {%- endif -%}
+      action: text.set_value
+  mode: single

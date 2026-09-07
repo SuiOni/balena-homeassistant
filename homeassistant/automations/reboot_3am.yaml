@@ -1,0 +1,11 @@
+- alias: Reboot 3 oclock
+  description: Reboot 3 oclock
+  triggers:
+    - at: "03:00:00"
+      trigger: time
+  conditions: []
+  actions:
+    - action: homeassistant.restart
+      metadata: {}
+      data: {}
+  mode: single

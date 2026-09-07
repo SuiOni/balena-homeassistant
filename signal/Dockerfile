@@ -1,5 +1,5 @@
-# https://hub.docker.com/r/pihole/pihole/tags
-FROM bbernhard/signal-cli-rest-api:1770423074-ci
+# https://hub.docker.com/r/bbernhard/signal-cli-rest-api/tags
+FROM bbernhard/signal-cli-rest-api:0.100
 
 COPY data/ /home/.local/share/signal-cli
 

@@ -28,5 +28,5 @@
             'wertstoff': 'Wertstofftonne',
             'xmastree': 'Weihnachtsbaum'
           } %}
-          🤖 Beep boop. Hier ist euer Haus-Bot: Bitte morgen rausstellen: {% for collection_type in collection_types %}{{ names.get(collection_type, collection_type) }}{% if not loop.last %}, {% endif %}{% endfor %}. Danke, Menschen. Ende der Durchsage. 🤖
+          🤖 Beep boop. Hier ist euer Haus-Bot: Bitte heute rausstellen: {% for collection_type in collection_types %}{{ names.get(collection_type, collection_type) }}{% if not loop.last %}, {% endif %}{% endfor %}. Danke, Menschen. Ende der Durchsage. 🤖
   mode: single

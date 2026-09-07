@@ -1,18 +1,22 @@
 - alias: Gerhard Hanloser neuer Artikel
   description: >-
     Benachrichtigt taeglich ueber neue Artikel von Gerhard Hanloser bei junge
-    Welt. Optional kann beim manuellen Ausloesen date im Format DD.MM.YYYY
-    uebergeben werden.
+    Welt. Zum manuellen Debuggen kann das Ereignis
+    junge_welt_author_debug mit date im Format DD.MM.YYYY ausgeloest werden.
   triggers:
     - trigger: time
       at: "23:59:00"
+      id: schedule
+    - trigger: event
+      event_type: junge_welt_author_debug
+      id: manual
   actions:
     - action: rest_command.jungewelt_gerhard_hanloser
       response_variable: resp
     - variables:
         html: "{{ resp.content if resp.content is string else resp.content | string }}"
         articles: >-
-          {{ html | regex_findall('(?s)<li[^>]+id="a_[^\"]+"[^>]*>.*?<div class="text-neutral-400 text-base">([^<]+)</div>.*?<div class="text-3xl[^>]*><a href="([^\"]+)"[^>]*>(.*?)</a>') }}
+          {{ html | regex_findall('(?is)<li\\b[^>]*\\bid="a_[0-9]+"[^>]*>(?:(?!</li>).)*?(\\d{2}\\.\\d{2}\\.\\d{4})\\s*</div>(?:(?!</li>).)*?<a\\b(?=[^>]*\\bhref\\s*=\\s*"(/artikel/[^"]+)")[^>]*>(.*?)</a>') }}
     - repeat:
         for_each: "{{ articles }}"
         sequence:
@@ -25,5 +29,10 @@
                 {{ repeat.item[2] | regex_replace('<[^>]+>', '') | trim }}
                 https://www.jungewelt.de{{ repeat.item[1] }}
   variables:
-    check_date: "{{ date | default(now().strftime('%d.%m.%Y'), true) }}"
+    check_date: >-
+      {% if trigger.id == 'manual' %}
+        {{ trigger.event.data.date | default(now().strftime('%d.%m.%Y'), true) | trim }}
+      {% else %}
+        {{ now().strftime('%d.%m.%Y') }}
+      {% endif %}
   mode: single

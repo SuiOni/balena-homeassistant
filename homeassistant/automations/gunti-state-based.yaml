@@ -1,0 +1,150 @@
+- alias: Gunti Status → DMX color (State Based)
+  description: Changes DMX light color based on wood stove operation modes
+  triggers:
+    - entity_id: sensor.gunta_betrieb
+      trigger: state
+    - trigger: time_pattern
+      minutes: "5"
+  actions:
+    - choose:
+        - conditions:
+            - condition: time
+              after: "06:30:00"
+              before: "23:59:00"
+          sequence:
+            - variables:
+                avg_temp_over_18: >
+                  {% set temps = state_attr('weather.forecast_home', 'forecast') |
+                  default([]) | map(attribute='temperature') | list %} {% set
+                  count = [24, temps | length] | min %} {% set sum = temps[:count]
+                  | sum %} {{ (sum / count) >= 18.0 if count > 0 else false }}
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: VOLLLAST
+                  sequence:
+                    - target:
+                        entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                      action: light.turn_on
+                      data:
+                        rgbw_color:
+                          - 255
+                          - 0
+                          - 0
+                          - 0
+                        brightness: 255
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: TEILLAST
+                  sequence:
+                    - target:
+                        entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                      action: light.turn_on
+                      data:
+                        rgbw_color:
+                          - 255
+                          - 120
+                          - 0
+                          - 0
+                        brightness: 200
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: GLUTERHALT.
+                  sequence:
+                    - target:
+                        entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                      action: light.turn_on
+                      data:
+                        rgbw_color:
+                          - 50
+                          - 0
+                          - 0
+                          - 100
+                        brightness: 100
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: PAUSE
+                  sequence:
+                    - target:
+                        entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                      action: light.turn_on
+                      data:
+                        rgbw_color:
+                          - 0
+                          - 0
+                          - 0
+                          - 100
+                        brightness: 100
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: NACHLEGEN
+                  sequence:
+                    - target:
+                        entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                      action: light.turn_on
+                      data:
+                        rgbw_color:
+                          - 0
+                          - 0
+                          - 255
+                          - 0
+                        brightness: 255
+                        effect: flash
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: STANDBY
+                  sequence:
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ avg_temp_over_18 }}"
+                          sequence:
+                            - target:
+                                entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                              action: light.turn_off
+                      default:
+                        - target:
+                            entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                          action: light.turn_on
+                          data:
+                            rgbw_color:
+                              - 0
+                              - 0
+                              - 255
+                              - 0
+                            brightness: 255
+                - conditions:
+                    - condition: state
+                      entity_id: sensor.gunta_betrieb
+                      state: WARTEN ZÜND.
+                  sequence:
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ avg_temp_over_18 }}"
+                          sequence:
+                            - target:
+                                entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                              action: light.turn_off
+                      default:
+                        - target:
+                            entity_id: light.dmx_bricklet_ejk_dmx_light_2
+                          action: light.turn_on
+                          data:
+                            rgbw_color:
+                              - 0
+                              - 0
+                              - 255
+                              - 0
+                            brightness: 255
+      default:
+        - target:
+            entity_id: light.dmx_bricklet_ejk_dmx_light_2
+          action: light.turn_off
+  mode: single
