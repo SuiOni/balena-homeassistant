@@ -30,7 +30,7 @@ notify:
     url: "http://127.0.0.1:8080" # URL where the Signal Messenger REST API is listening
     number: "+4915120204977"     # sender number (Signal account)
     recipients:                  # one or more default recipients
-      - "group.bXh2QWNLdGYxRTRpV0h4SjJlY1pzVXJVNGZTU3llU1dMaXMrT0d6NGlObz0="
+      - "group.cGpTYkRmNjJPYm0yajJwL2VsSmkwZTdQcmdzL0FYZ0c0VjBCNnppbUdqRT0="
       
       
 
