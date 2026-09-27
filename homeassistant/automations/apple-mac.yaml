@@ -1,0 +1,52 @@
+- alias: "Apple M5 512GB Memory Availability Monitor"
+  description: >-
+    Checks whether 512 GB memory appears in Apple's
+    configuration API at random intervals of 5–15 minutes.
+
+  triggers:
+    - trigger: homeassistant
+      event: start
+
+    - trigger: event
+      event_type: apple_m5_manual_check
+
+  actions:
+    - repeat:
+        sequence:
+          - action: rest_command.apple_m5_product_check
+            response_variable: response
+
+          - variables:
+              memory_options: >-
+                {{ response.content.body.options
+                   ['memory-dimensionMemory'].compatibleOptions
+                   | default({}) }}
+
+              memory_512gb_exists: >-
+                {{ '512gb' in memory_options }}
+
+          - if:
+              - condition: template
+                value_template: "{{ memory_512gb_exists | bool }}"
+            then:
+              - action: notify.signal_artikelalarm
+                data:
+                  message: >-
+                    🤖 Beep boop! 512 GB memory is now listed
+                    as an option for the Apple Mac Studio!
+
+                    Check it here:
+                    https://www.apple.com/de-business/shop/buy-mac/mac-studio
+
+                    🤖
+
+              - stop: "512 GB memory option detected."
+
+          - delay:
+              seconds: "{{ range(300, 901) | random }}"
+
+        until:
+          - condition: template
+            value_template: "{{ false }}"
+
+  mode: single

@@ -2,7 +2,7 @@
   description: Benachrichtigt um 21:45 Uhr ueber die fuer morgen bereitzustellenden Tonnen.
   triggers:
     - trigger: time
-      at: "21:45:00"
+      at: "19:45:00"
   actions:
     - action: rest_command.awb_trash_calender_d44
       response_variable: response

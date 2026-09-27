@@ -50,6 +50,24 @@ rest_command:
         "number": "{{ number }}",
         "recipients": {{ recipients | tojson }}
       }
+  
+  apple_m5_product_check:
+    url: >-
+      https://www.apple.com/de-business/shop/api/cto/update-config?collection=MACSTUDIO_2026_COLLECTION&fae=true&sv.processor-dimensionChip=m5ultra&sv.processor-dimensionChip-cpuCoreCount-gpuCoreCount=m5ultra-36-80
+    method: GET
+    headers:
+      Accept: "*/*"
+      Accept-Language: "en-GB,en-US;q=0.9,en;q=0.8,de;q=0.7"
+      Cache-Control: "no-cache"
+      Pragma: "no-cache"
+      Referer: "https://www.apple.com/de-business/shop/buy-mac/mac-studio"
+      User-Agent: >-
+        Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+        AppleWebKit/537.36 (KHTML, like Gecko)
+        Chrome/152.0.0.0 Safari/537.36
+      x-aos-ui-fetch-call-1: "homeassistant"
+    timeout: 30
+    
   anarchist_homepage:
     url: "https://www.anarchistquotes.com/"
     method: GET
