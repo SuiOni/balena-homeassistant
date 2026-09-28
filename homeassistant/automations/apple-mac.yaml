@@ -1,11 +1,14 @@
 - alias: "Apple M5 512GB Memory Availability Monitor"
   description: >-
     Checks whether 512 GB memory appears in Apple's
-    configuration API at random intervals of 5–15 minutes.
+    configuration API at random intervals of 10–15 minutes.
 
   triggers:
     - trigger: homeassistant
       event: start
+
+    - trigger: event
+      event_type: automation_reloaded
 
     - trigger: event
       event_type: apple_m5_manual_check
@@ -13,17 +16,23 @@
   actions:
     - repeat:
         sequence:
+          - variables:
+              response: {}
+
           - action: rest_command.apple_m5_product_check
             response_variable: response
+            continue_on_error: true
 
           - variables:
               memory_options: >-
-                {{ response.content.body.options
-                   ['memory-dimensionMemory'].compatibleOptions
-                   | default({}) }}
+                {% set content = response.get('content', {}) if response is mapping and response.get('status') == 200 else {} %}
+                {% set body = content.get('body', {}) if content is mapping else {} %}
+                {% set options = body.get('options', {}) if body is mapping else {} %}
+                {% set memory = options.get('memory-dimensionMemory', {}) if options is mapping else {} %}
+                {{ memory.get('compatibleOptions', {}) if memory is mapping else {} }}
 
               memory_512gb_exists: >-
-                {{ '512gb' in memory_options }}
+                {{ memory_options is iterable and '512gb' in memory_options }}
 
           - if:
               - condition: template
@@ -43,7 +52,7 @@
               - stop: "512 GB memory option detected."
 
           - delay:
-              seconds: "{{ range(300, 901) | random }}"
+              seconds: "{{ range(600, 901) | random }}"
 
         until:
           - condition: template
