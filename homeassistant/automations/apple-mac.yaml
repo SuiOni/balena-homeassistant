@@ -49,6 +49,12 @@
 
                     🤖
 
+              - action: automation.turn_off
+                target:
+                  entity_id: "{{ this.entity_id }}"
+                data:
+                  stop_actions: false
+
               - stop: "512 GB memory option detected."
 
           - delay:
